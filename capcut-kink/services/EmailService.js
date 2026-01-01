@@ -7,6 +7,8 @@ import { CONFIG } from '../config/config.js';
 import { sleep, extractOTPCode } from '../utils/helpers.js';
 import chalk from 'chalk';
 import ora from 'ora';
+import { EmailService } from './EmailService.js';
+
 
 export class EmailService {
   /**
@@ -85,4 +87,5 @@ export class EmailService {
       throw error;
     }
   }
+
 }
