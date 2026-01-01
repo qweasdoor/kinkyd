@@ -2,7 +2,7 @@
  * services/CapCutService.js - Sinkronisasi Alur Indonesia
  */
 import { CONFIG } from '../config/config.js';
-import { BrowserService } from '../core/BrowserService.js';
+import { BrowserService } from './BrowserService.js';
 import { generateRandomBirthday, sleep } from '../utils/helpers.js';
 // ... (imports lainnya)
 
@@ -139,5 +139,6 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
