@@ -68,7 +68,7 @@ CAPCUT: {
     { name: "Juli", days: 31 }, { name: "Agustus", days: 31 }, { name: "September", days: 30 },
     { name: "Oktober", days: 31 }, { name: "November", days: 30 }, { name: "Desember", days: 31 }
   ]
-}
+},
 
   // File Configuration
   FILES: {
@@ -78,5 +78,6 @@ CAPCUT: {
   }
 
 };
+
 
 
