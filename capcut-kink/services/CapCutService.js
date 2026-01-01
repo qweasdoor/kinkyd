@@ -5,6 +5,8 @@ import { CONFIG } from '../config/config.js';
 import { BrowserService } from './BrowserService.js';
 import { generateRandomBirthday, sleep } from '../utils/helpers.js';
 import chalk from 'chalk';
+import { EmailService } from './EmailService.js';
+
 
 
 export class CapCutService {
@@ -140,6 +142,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
