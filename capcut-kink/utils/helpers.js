@@ -83,12 +83,9 @@ Tanggal Lahir: ${birthday.day} ${birthday.month} ${birthday.year}
 `;
 };
 
-/**
- * Extract OTP code from email body
- * @param {string} emailBody - Email body text
- * @returns {string|null} OTP code or null if not found
- */
+// Ganti fungsi extractOTPCode di helpers.js Anda
 export const extractOTPCode = (emailBody) => {
-  const match = emailBody.match(/(\d{6})/);
+  // Regex diperkuat untuk mencari 6 digit angka yang biasanya berdiri sendiri
+  const match = emailBody.match(/\b(\d{6})\b/);
   return match ? match[1] : null;
 };
