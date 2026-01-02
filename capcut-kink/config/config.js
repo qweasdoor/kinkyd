@@ -18,6 +18,7 @@ export const CONFIG = {
 
   // CapCut Website Configuration
   CAPCUT: {
+    SIGNUP_URL: 'https://www.capcut.com/id-id/signup',
     SELECTORS: {
       EMAIL_INPUT: 'input[name="signUsername"]',
       CONTINUE_BUTTON: '.lv_sign_in_panel_wide-primary-button', // Tombol Lanjutkan
@@ -82,3 +83,4 @@ export const CONFIG = {
     DEFAULT_PASSWORD: 'keep123',
   },
 };
+
