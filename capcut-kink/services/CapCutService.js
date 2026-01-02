@@ -48,36 +48,41 @@ static async fillPassword(page, password) {
    * Fill in birthday information (Optimized for UI provided)
    */
 static async fillBirthday(page) {
+  const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
   const birthday = generateRandomBirthday();
 
   try {
-    // TUNGGU HALAMAN BIRTHDAY
-    await page.waitForSelector('text=Kapan tanggal lahir Anda?', { timeout: 20000 });
+    // 1. Tunggu transisi halaman selesai
+    await sleep(2500); 
 
-    // ===== TAHUN =====
-    await page.waitForSelector('input[placeholder="Tahun"]', { visible: true });
-    await page.click('input[placeholder="Tahun"]', { clickCount: 3 });
-    await page.type('input[placeholder="Tahun"]', String(birthday.year), { delay: 80 });
+    // 2. Pastikan input Tahun muncul dan bisa diklik
+    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 15000 });
+    await page.click(BIRTHDAY_INPUT); // Klik untuk fokus
+    
+    // 3. Ketik Tahun secara perlahan
+    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 150 });
+    await sleep(800);
 
-    // ===== BULAN =====
-    await page.click('div[role="button"]:has-text("Bulan")');
-    await sleep(600);
-    await page.click(`li:has-text("${birthday.month}")`);
+    // 4. Pilih Bulan
+    await page.click(BIRTHDAY_MONTH_SELECTOR);
+    await sleep(1000);
+    await BrowserService.selectDropdownItem(page, birthday.month);
+    await sleep(500);
 
-    // ===== HARI =====
-    await page.click('div[role="button"]:has-text("Hari")');
-    await sleep(600);
-    await page.click(`li:has-text("${birthday.day}")`);
+    // 5. Pilih Hari
+    await page.click(BIRTHDAY_DAY_SELECTOR);
+    await sleep(1000);
+    await BrowserService.selectDropdownItem(page, birthday.day);
+    await sleep(1000); // Tunggu tombol Berikutnya menjadi aktif (biru)
 
-    // ===== BERIKUTNYA =====
-    await page.waitForSelector('button:has-text("Berikutnya"):not([disabled])');
-    await page.click('button:has-text("Berikutnya")');
-
-    console.log(chalk.green('🎂 Birthday berhasil diisi'));
+    // 6. Klik Berikutnya
+    await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
+    await page.click(BIRTHDAY_NEXT_BUTTON);
+    
+    console.log(chalk.green(`✅ Berhasil mengisi TTL: ${birthday.day} ${birthday.month} ${birthday.year}`));
     return birthday;
-
-  } catch (err) {
-    throw new Error(`Gagal di tahap Birthday (UI berubah): ${err.message}`);
+  } catch (error) {
+    throw new Error(`Gagal di tahap Birthday: ${error.message}`);
   }
 }
   
@@ -149,6 +154,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
