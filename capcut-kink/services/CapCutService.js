@@ -48,57 +48,53 @@ static async fillPassword(page, password) {
    * Fill in birthday information (Optimized for UI provided)
    */
 static async fillBirthday(page) {
-  const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
-  const birthday = generateRandomBirthday();
+  const { 
+    BIRTHDAY_INPUT, 
+    BIRTHDAY_MONTH_SELECTOR, 
+    BIRTHDAY_DAY_SELECTOR, 
+    BIRTHDAY_NEXT_BUTTON 
+  } = CONFIG.CAPCUT.SELECTORS;
+  
+  const birthday = generateRandomBirthday(); // Mengambil data acak dari helpers.js
 
   try {
-    // 1. TUNGGU HALAMAN STABIL (Kunci Utama)
-    // Menunggu transisi animasi CapCut selesai
-    await sleep(5000); 
-    
-    // Pastikan jaringan tidak sibuk sebelum mencari elemen
-    try {
-      await page.waitForNetworkIdle({ idleTime: 1000, timeout: 7000 });
-    } catch (e) { /* ignore timeout */ }
+    // 1. TUNGGU TRANSISI HALAMAN (Crucial)
+    // Beri waktu 3 detik agar animasi transisi selesai dan elemen Tahun muncul
+    await sleep(3000); 
 
-    // 2. MENCARI INPUT TAHUN
-    // Menggunakan timeout yang lebih panjang untuk halaman yang berat
-    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 30000 });
-    
-    // Klik dan hapus jika ada teks default
-    await page.click(BIRTHDAY_INPUT);
-    await page.keyboard.down('Control');
-    await page.keyboard.press('A');
-    await page.keyboard.up('Control');
-    await page.keyboard.press('Backspace');
-    
-    // Ketik tahun secara perlahan
-    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 250 });
-    await sleep(1500);
+    // 2. ISI TAHUN (Angka)
+    // Mencari input berdasarkan placeholder atau class spesifik
+    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 20000 });
+    await page.click(BIRTHDAY_INPUT); // Klik untuk fokus sesuai kursor pada UI
+    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 150 });
+    await sleep(800);
 
-    // 3. PILIH BULAN
+    // 3. PILIH BULAN (Dropdown)
+    // Menggunakan selector dropdown pertama
     await page.waitForSelector(BIRTHDAY_MONTH_SELECTOR, { visible: true });
     await page.click(BIRTHDAY_MONTH_SELECTOR);
-    await sleep(2000); // Beri waktu dropdown popup muncul
+    await sleep(1200); // Menunggu daftar popup bulan muncul
     await BrowserService.selectDropdownItem(page, birthday.month);
-    await sleep(1500);
+    await sleep(800);
 
-    // 4. PILIH HARI
+    // 4. PILIH HARI (Dropdown)
+    // Menggunakan selector dropdown kedua
     await page.waitForSelector(BIRTHDAY_DAY_SELECTOR, { visible: true });
     await page.click(BIRTHDAY_DAY_SELECTOR);
-    await sleep(2000);
+    await sleep(1200); // Menunggu daftar popup hari muncul
     await BrowserService.selectDropdownItem(page, birthday.day);
 
-    // 5. KLIK BERIKUTNYA
-    // Tunggu tombol menjadi aktif (berwarna biru di UI)
-    await sleep(2500); 
+    // 5. KLIK TOMBOL BERIKUTNYA
+    // Memberikan jeda agar sistem CapCut memvalidasi input dan mengaktifkan tombol (biru)
+    await sleep(2000); 
     await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
     await page.click(BIRTHDAY_NEXT_BUTTON);
     
-    console.log(chalk.green(`✅ Berhasil mengisi TTL: ${birthday.day} ${birthday.month} ${birthday.year}`));
+    console.log(chalk.green(`✅ TTL Berhasil: ${birthday.day} ${birthday.month} ${birthday.year}`));
     return birthday;
+
   } catch (error) {
-    throw new Error(`Gagal di tahap Birthday: ${error.message}`);
+    throw new Error(`Gagal pada tahap Birthday: ${error.message}`);
   }
 }
   
@@ -170,6 +166,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
