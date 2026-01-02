@@ -45,53 +45,173 @@ static async fillPassword(page, password) {
   }
   
   /**
-   * Fill in birthday information (Optimized for UI provided)
-   */
+ * Fill in birthday information (Optimized for UI provided)
+ */
 static async fillBirthday(page) {
-  const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
   const birthday = generateRandomBirthday();
 
   try {
-    await sleep(5000); // Tunggu render halaman Birthday
+    await sleep(2000); // transisi step sebelumnya
 
-    // Deteksi Frame Otomatis
-    let target = page;
-    if (!(await page.$(BIRTHDAY_INPUT))) {
+    // ==== Helper: cari target (page atau frame) yang berisi elemen birthday ====
+    const findTarget = async () => {
+      const yearSelector = 'input[placeholder="Tahun"]';
+
+      if (await page.$(yearSelector)) return page;
+
       for (const frame of page.frames()) {
-        if (await frame.$(BIRTHDAY_INPUT)) { target = frame; break; }
+        try {
+          if (await frame.$(yearSelector)) return frame;
+        } catch (_) {}
       }
-    }
-
-    // Isi Tahun dengan Fokus Paksa
-    await target.waitForSelector(BIRTHDAY_INPUT, { visible: true });
-    await target.click(BIRTHDAY_INPUT, { clickCount: 3 });
-    await target.keyboard.press('Backspace');
-    await target.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
-    await sleep(1000);
-
-    // Pilih Bulan & Hari menggunakan Evaluate agar lebih stabil
-    const selectDate = async (sel, val) => {
-      await target.click(sel);
-      await sleep(1500);
-      await target.evaluate((v) => {
-        const els = Array.from(document.querySelectorAll('li, [role="option"]'));
-        const found = els.find(e => e.textContent.trim() === String(v));
-        if (found) found.click();
-      }, val);
-      await sleep(1000);
+      return page; // fallback
     };
 
-    await selectDate(BIRTHDAY_MONTH_SELECTOR, birthday.month);
-    await selectDate(BIRTHDAY_DAY_SELECTOR, birthday.day);
+    const target = await findTarget();
 
-    // Klik Berikutnya
-    await sleep(2000);
-    await target.click(BIRTHDAY_NEXT_BUTTON);
+    // ==== Tunggu container birthday muncul dulu (lebih aman) ====
+    // kalau class ini berubah, fallback tetap akan jalan karena kita tunggu input Tahun juga
+    const containerSel = '.gate_birthday-picker-content';
+    if (await target.$(containerSel)) {
+      await target.waitForSelector(containerSel, { visible: true, timeout: 30000 });
+    }
+
+    // ==== Isi Tahun (pakai placeholder yang stabil) ====
+    const YEAR_INPUT = 'input[placeholder="Tahun"]';
+    await target.waitForSelector(YEAR_INPUT, { visible: true, timeout: 30000 });
+
+    await target.click(YEAR_INPUT, { clickCount: 3 });
+    // bersihin value dengan cepat (lebih konsisten daripada Backspace sekali)
+    await target.keyboard.down('Control');
+    await target.keyboard.press('A');
+    await target.keyboard.up('Control');
+    await target.keyboard.press('Backspace');
+
+    await target.type(YEAR_INPUT, String(birthday.year), { delay: 50 });
+    await sleep(500);
+
+    // ==== Helper: pilih option dropdown lv-select berdasarkan placeholder ("Bulan"/"Hari") ====
+    const selectLvOptionByPlaceholder = async (placeholderText, optionText) => {
+      const inputSel = `input[placeholder="${placeholderText}"]`;
+
+      await target.waitForSelector(inputSel, { visible: true, timeout: 30000 });
+
+      // klik dropdown via elemen combobox terdekat dan ambil aria-controls (id popup)
+      const controlsId = await target.evaluate((sel) => {
+        const input = document.querySelector(sel);
+        if (!input) return null;
+
+        const root =
+          input.closest('.gate_birthday-picker-selector') ||
+          input.closest('.lv-select') ||
+          input.parentElement;
+
+        const combobox = root?.querySelector('[role="combobox"]') || root;
+        if (!combobox) return null;
+
+        combobox.click();
+        return combobox.getAttribute('aria-controls');
+      }, inputSel);
+
+      if (!controlsId) throw new Error(`Tidak menemukan aria-controls untuk dropdown "${placeholderText}"`);
+
+      // tunggu popup-nya muncul
+      const popupSel = `#${CSS.escape(controlsId)}`;
+      await target.waitForSelector(popupSel, { visible: true, timeout: 15000 });
+
+      // klik option berdasarkan teks DI DALAM popup tsb (bukan global)
+      const clicked = await target.evaluate(
+        ({ popupSelector, text }) => {
+          const popup = document.querySelector(popupSelector);
+          if (!popup) return false;
+
+          const candidates = Array.from(popup.querySelectorAll('[role="option"], li, div'));
+          const el = candidates.find((e) => e.textContent && e.textContent.trim() === String(text).trim());
+          if (el) {
+            el.click();
+            return true;
+          }
+          return false;
+        },
+        { popupSelector: popupSel, text: optionText }
+      );
+
+      if (!clicked) {
+        throw new Error(`Opsi "${optionText}" tidak ditemukan pada dropdown "${placeholderText}"`);
+      }
+
+      // tunggu popup menutup (stabil)
+      await target.waitForFunction(
+        (id) => {
+          const el = document.getElementById(id);
+          if (!el) return true;
+          const style = window.getComputedStyle(el);
+          return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null;
+        },
+        { timeout: 15000 },
+        controlsId
+      );
+
+      await sleep(300);
+    };
+
+    // ==== Pilih Bulan dan Hari sesuai UI (Bulan berupa teks Indonesia) ====
+    // Pastikan generateRandomBirthday() mengembalikan:
+    // - birthday.monthText: "Januari"..."Desember" (REKOMENDASI)
+    // atau kalau hanya punya angka 1-12, kita mapping di bawah.
+    const monthMap = {
+      1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+      5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+      9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember',
+    };
+
+    const monthText = birthday.monthText || monthMap[birthday.month] || String(birthday.month);
+    const dayText = String(birthday.day);
+
+    await selectLvOptionByPlaceholder('Bulan', monthText);
+    await selectLvOptionByPlaceholder('Hari', dayText);
+
+    // ==== Klik Berikutnya ====
+    // Karena selector tombol bisa beda-beda, kita pakai beberapa fallback aman
+    const NEXT_BTN_SELECTORS = [
+      '.lv_sign_in_panel_wide-primary-button',
+      'button.lv_sign_in_panel_wide-primary-button',
+      'button:has-text("Berikutnya")',
+      'button:has-text("Lanjut")',
+      'button:has-text("Continue")',
+      '[role="button"]:has-text("Berikutnya")',
+    ];
+
+    let nextClicked = false;
+    for (const sel of NEXT_BTN_SELECTORS) {
+      try {
+        const el = await target.$(sel);
+        if (el) {
+          await el.click();
+          nextClicked = true;
+          break;
+        }
+      } catch (_) {}
+    }
+
+    if (!nextClicked) {
+      // fallback terakhir: cari tombol di DOM via evaluate berdasarkan teks
+      const clicked = await target.evaluate(() => {
+        const texts = ['Berikutnya', 'Lanjut', 'Continue'];
+        const btns = Array.from(document.querySelectorAll('button, [role="button"]'));
+        const b = btns.find((x) => texts.includes((x.textContent || '').trim()));
+        if (b) { b.click(); return true; }
+        return false;
+      });
+      if (!clicked) throw new Error('Tombol Next/Berikutnya tidak ditemukan');
+    }
+
     return birthday;
   } catch (error) {
     throw new Error(`Gagal di Birthday: ${error.message}`);
   }
 }
+  
   /**
    * Enter OTP code
    */
@@ -148,6 +268,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
