@@ -48,57 +48,54 @@ static async fillPassword(page, password) {
    * Fill in birthday information (Optimized for UI provided)
    */
 static async fillBirthday(page) {
-  const { 
-    BIRTHDAY_INPUT, 
-    BIRTHDAY_MONTH_SELECTOR, 
-    BIRTHDAY_DAY_SELECTOR, 
-    BIRTHDAY_NEXT_BUTTON 
-  } = CONFIG.CAPCUT.SELECTORS;
-  
-  const birthday = generateRandomBirthday();
+  const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
+  const birthday = generateRandomBirthday(); //
 
   try {
-    // 1. Tunggu transisi halaman Gambar 3 selesai sepenuhnya
-    await sleep(3500); 
+    // 1. Jeda ekstra untuk memastikan frame/halaman dimuat
+    await sleep(4500); 
 
-    // 2. Isi Tahun
-    // Tunggu hingga elemen benar-benar siap
-    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 15000 });
-    
-    // Klik elemen untuk memberikan fokus kursor
-    await page.click(BIRTHDAY_INPUT);
-    
-    // Hapus isi jika ada teks tersisa (Backspace 4x untuk tahun)
-    for (let i = 0; i < 4; i++) {
-        await page.keyboard.press('Backspace');
+    // 2. Deteksi otomatis lokasi elemen (Halaman utama atau Iframe)
+    let context = page;
+    const element = await page.$(BIRTHDAY_INPUT);
+    if (!element) {
+      for (const frame of page.frames()) {
+        if (await frame.$(BIRTHDAY_INPUT)) { context = frame; break; }
+      }
     }
 
-    // Ketik Tahun
-    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
-    await sleep(800);
+    // 3. Isi Tahun
+    await context.waitForSelector(BIRTHDAY_INPUT, { visible: true });
+    await context.click(BIRTHDAY_INPUT);
+    // Bersihkan input
+    await context.focus(BIRTHDAY_INPUT);
+    for(let i=0; i<4; i++) await context.keyboard.press('Backspace');
+    await context.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
+    await sleep(1000);
 
-    // 3. Pilih Bulan (Dropdown)
-    await page.click(BIRTHDAY_MONTH_SELECTOR);
-    await sleep(1200); 
-    await BrowserService.selectDropdownItem(page, birthday.month);
-    await sleep(800);
+    // 4. Pilih Bulan & Hari
+    const selectDate = async (selector, value) => {
+      await context.click(selector);
+      await sleep(1500);
+      await context.evaluate((val) => {
+        const items = Array.from(document.querySelectorAll('li, [role="option"]'));
+        const target = items.find(el => el.textContent.trim() === String(val));
+        if (target) target.click();
+      }, value);
+      await sleep(1000);
+    };
 
-    // 4. Pilih Hari (Dropdown)
-    await page.click(BIRTHDAY_DAY_SELECTOR);
-    await sleep(1200);
-    await BrowserService.selectDropdownItem(page, birthday.day);
+    await selectDate(BIRTHDAY_MONTH_SELECTOR, birthday.month);
+    await selectDate(BIRTHDAY_DAY_SELECTOR, birthday.day);
 
-    // 5. Klik Tombol Berikutnya
-    // Tombol akan aktif (biru) setelah semua data terisi valid
-    await sleep(2000); 
-    await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
-    await page.click(BIRTHDAY_NEXT_BUTTON);
+    // 5. Klik Berikutnya
+    await sleep(2000);
+    await context.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
+    await context.click(BIRTHDAY_NEXT_BUTTON);
     
-    console.log(chalk.green(`✅ Berhasil melewati tahap Birthday!`));
     return birthday;
-
   } catch (error) {
-    throw new Error(`Gagal pada tahap Birthday: ${error.message}`);
+    throw new Error(`Birthday step failed: ${error.message}`);
   }
 }
   
@@ -170,6 +167,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
