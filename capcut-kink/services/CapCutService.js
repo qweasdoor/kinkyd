@@ -3,10 +3,12 @@
  */
 import { CONFIG } from '../config/config.js';
 import { BrowserService } from './BrowserService.js';
-import { generateRandomBirthday, sleep } from '../utils/helpers.js';
-import chalk from 'chalk';
 import { EmailService } from './EmailService.js';
 import { FileService } from './FileService.js';
+import { generateRandomBirthday, sleep, formatAccountData } from '../utils/helpers.js';
+import chalk from 'chalk';
+import ora from 'ora';
+
 
 
 
@@ -144,6 +146,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
