@@ -27,12 +27,11 @@ export const CONFIG = {
       SIGNUP_BUTTON: '.lv_sign_in_panel_wide-sign-in-button', // Tombol daftar/lanjut setelah password
 
       // Birthday UI
-    BIRTHDAY_INPUT: 'input.gate_birthday-picker-input',
-    BIRTHDAY_MONTH_SELECTOR: 'div.gate_birthday-picker-selector:nth-of-type(1), [role="combobox"]:nth-of-type(1)',
-    BIRTHDAY_DAY_SELECTOR: 'div.gate_birthday-picker-selector:nth-of-type(2), [role="combobox"]:nth-of-type(2)',
-    BIRTHDAY_NEXT_BUTTON: '.lv_sign_in_panel_wide-primary-button',
-    OTP_INPUT: 'input.lv-input',
-    DROPDOWN_ITEMS: '.lv-select-popup li'
+    BIRTHDAY_INPUT: 'input.gate_birthday-picker-input', // Selector class murni
+    BIRTHDAY_MONTH_SELECTOR: '.gate_birthday-picker-selector:nth-of-type(1)', 
+    BIRTHDAY_DAY_SELECTOR: '.gate_birthday-picker-selector:nth-of-type(2)',
+    BIRTHDAY_NEXT_BUTTON: '.lv_sign_in_panel_wide-primary-button', // Tombol biru aktif
+    OTP_INPUT: 'input.lv-input'
     },
   },
 
@@ -85,6 +84,7 @@ export const CONFIG = {
     DEFAULT_PASSWORD: 'keep123',
   },
 };
+
 
 
 
