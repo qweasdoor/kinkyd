@@ -27,9 +27,9 @@ export const CONFIG = {
       SIGNUP_BUTTON: '.lv_sign_in_panel_wide-sign-in-button', // Tombol daftar/lanjut setelah password
 
       // Birthday UI
-    BIRTHDAY_INPUT: '.gate_birthday-picker-input', 
-    BIRTHDAY_MONTH_SELECTOR: '.gate_birthday-picker-selector:nth-child(2)', 
-    BIRTHDAY_DAY_SELECTOR: '.gate_birthday-picker-selector:nth-child(3)',
+    BIRTHDAY_INPUT: 'input.gate_birthday-picker-input', 
+    BIRTHDAY_MONTH_SELECTOR: 'div[role="combobox"]:nth-of-type(1)', 
+    BIRTHDAY_DAY_SELECTOR: 'div[role="combobox"]:nth-of-type(2)',
     BIRTHDAY_NEXT_BUTTON: '.lv_sign_in_panel_wide-primary-button',
     },
   },
@@ -83,6 +83,7 @@ export const CONFIG = {
     DEFAULT_PASSWORD: 'keep123',
   },
 };
+
 
 
 
