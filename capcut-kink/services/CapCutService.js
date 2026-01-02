@@ -55,42 +55,46 @@ static async fillBirthday(page) {
     BIRTHDAY_NEXT_BUTTON 
   } = CONFIG.CAPCUT.SELECTORS;
   
-  const birthday = generateRandomBirthday(); // Mengambil data acak dari helpers.js
+  const birthday = generateRandomBirthday();
 
   try {
-    // 1. TUNGGU TRANSISI HALAMAN (Crucial)
-    // Beri waktu 3 detik agar animasi transisi selesai dan elemen Tahun muncul
-    await sleep(3000); 
+    // 1. Tunggu transisi halaman Gambar 3 selesai sepenuhnya
+    await sleep(3500); 
 
-    // 2. ISI TAHUN (Angka)
-    // Mencari input berdasarkan placeholder atau class spesifik
-    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 20000 });
-    await page.click(BIRTHDAY_INPUT); // Klik untuk fokus sesuai kursor pada UI
-    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 150 });
+    // 2. Isi Tahun
+    // Tunggu hingga elemen benar-benar siap
+    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 15000 });
+    
+    // Klik elemen untuk memberikan fokus kursor
+    await page.click(BIRTHDAY_INPUT);
+    
+    // Hapus isi jika ada teks tersisa (Backspace 4x untuk tahun)
+    for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('Backspace');
+    }
+
+    // Ketik Tahun
+    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
     await sleep(800);
 
-    // 3. PILIH BULAN (Dropdown)
-    // Menggunakan selector dropdown pertama
-    await page.waitForSelector(BIRTHDAY_MONTH_SELECTOR, { visible: true });
+    // 3. Pilih Bulan (Dropdown)
     await page.click(BIRTHDAY_MONTH_SELECTOR);
-    await sleep(1200); // Menunggu daftar popup bulan muncul
+    await sleep(1200); 
     await BrowserService.selectDropdownItem(page, birthday.month);
     await sleep(800);
 
-    // 4. PILIH HARI (Dropdown)
-    // Menggunakan selector dropdown kedua
-    await page.waitForSelector(BIRTHDAY_DAY_SELECTOR, { visible: true });
+    // 4. Pilih Hari (Dropdown)
     await page.click(BIRTHDAY_DAY_SELECTOR);
-    await sleep(1200); // Menunggu daftar popup hari muncul
+    await sleep(1200);
     await BrowserService.selectDropdownItem(page, birthday.day);
 
-    // 5. KLIK TOMBOL BERIKUTNYA
-    // Memberikan jeda agar sistem CapCut memvalidasi input dan mengaktifkan tombol (biru)
+    // 5. Klik Tombol Berikutnya
+    // Tombol akan aktif (biru) setelah semua data terisi valid
     await sleep(2000); 
     await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
     await page.click(BIRTHDAY_NEXT_BUTTON);
     
-    console.log(chalk.green(`✅ TTL Berhasil: ${birthday.day} ${birthday.month} ${birthday.year}`));
+    console.log(chalk.green(`✅ Berhasil melewati tahap Birthday!`));
     return birthday;
 
   } catch (error) {
@@ -166,6 +170,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
