@@ -52,65 +52,50 @@ static async fillBirthday(page) {
   const birthday = generateRandomBirthday(); //
 
   try {
-    // 1. Jeda ekstra untuk memastikan frame/halaman dimuat
-    await sleep(4500); 
+    // 1. Tunggu transisi halaman Gambar 3
+    await sleep(5000); 
 
-    // 2. Deteksi otomatis lokasi elemen (Halaman utama atau Iframe)
-    let context = page;
+    // 2. Cari elemen di halaman utama atau semua frame yang tersedia
+    let target = page;
     const element = await page.$(BIRTHDAY_INPUT);
     if (!element) {
       for (const frame of page.frames()) {
-        if (await frame.$(BIRTHDAY_INPUT)) { context = frame; break; }
+        if (await frame.$(BIRTHDAY_INPUT)) { target = frame; break; }
       }
     }
 
-    // 3. Isi Tahun
-    await context.waitForSelector(BIRTHDAY_INPUT, { visible: true });
-    await context.click(BIRTHDAY_INPUT);
-    // Bersihkan input
-    await context.focus(BIRTHDAY_INPUT);
-    for(let i=0; i<4; i++) await context.keyboard.press('Backspace');
-    await context.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
+    // 3. Fokus dan Isi Tahun
+    await target.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 20000 });
+    await target.click(BIRTHDAY_INPUT, { clickCount: 3 });
+    await target.keyboard.press('Backspace');
+    await target.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
     await sleep(1000);
 
     // 4. Pilih Bulan & Hari
-    const selectDate = async (selector, value) => {
-      await context.click(selector);
+    const selectFromList = async (selector, value) => {
+      await target.click(selector);
       await sleep(1500);
-      await context.evaluate((val) => {
+      await target.evaluate((v) => {
         const items = Array.from(document.querySelectorAll('li, [role="option"]'));
-        const target = items.find(el => el.textContent.trim() === String(val));
-        if (target) target.click();
+        const found = items.find(el => el.textContent.trim() === String(v));
+        if (found) found.click();
       }, value);
       await sleep(1000);
     };
 
-    await selectDate(BIRTHDAY_MONTH_SELECTOR, birthday.month);
-    await selectDate(BIRTHDAY_DAY_SELECTOR, birthday.day);
+    await selectFromList(BIRTHDAY_MONTH_SELECTOR, birthday.month);
+    await selectFromList(BIRTHDAY_DAY_SELECTOR, birthday.day);
 
-    // 5. Klik Berikutnya
+    // 5. Klik Berikutnya setelah tombol aktif (biru)
     await sleep(2000);
-    await context.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
-    await context.click(BIRTHDAY_NEXT_BUTTON);
+    await target.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
+    await target.click(BIRTHDAY_NEXT_BUTTON);
     
     return birthday;
   } catch (error) {
     throw new Error(`Birthday step failed: ${error.message}`);
   }
 }
-  
-  /**
-   * Helper: Mencari dan mengeklik item di dalam dropdown berdasarkan teks
-   */
- static async clickItemByText(page, text) {
-    return await page.evaluate((t) => {
-      const items = Array.from(document.querySelectorAll('li, [role="option"]'));
-      const found = items.find(el => el.textContent.trim() === t);
-      if (found) { found.click(); return true; }
-      return false;
-    }, String(text));
-  }
-
   /**
    * Enter OTP code
    */
@@ -167,6 +152,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
