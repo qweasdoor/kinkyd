@@ -52,30 +52,46 @@ static async fillBirthday(page) {
   const birthday = generateRandomBirthday();
 
   try {
-    // 1. Tunggu transisi halaman selesai
-    await sleep(2500); 
-
-    // 2. Pastikan input Tahun muncul dan bisa diklik
-    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 15000 });
-    await page.click(BIRTHDAY_INPUT); // Klik untuk fokus
+    // 1. TUNGGU HALAMAN STABIL (Kunci Utama)
+    // Menunggu transisi animasi CapCut selesai
+    await sleep(5000); 
     
-    // 3. Ketik Tahun secara perlahan
-    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 150 });
-    await sleep(800);
+    // Pastikan jaringan tidak sibuk sebelum mencari elemen
+    try {
+      await page.waitForNetworkIdle({ idleTime: 1000, timeout: 7000 });
+    } catch (e) { /* ignore timeout */ }
 
-    // 4. Pilih Bulan
+    // 2. MENCARI INPUT TAHUN
+    // Menggunakan timeout yang lebih panjang untuk halaman yang berat
+    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 30000 });
+    
+    // Klik dan hapus jika ada teks default
+    await page.click(BIRTHDAY_INPUT);
+    await page.keyboard.down('Control');
+    await page.keyboard.press('A');
+    await page.keyboard.up('Control');
+    await page.keyboard.press('Backspace');
+    
+    // Ketik tahun secara perlahan
+    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 250 });
+    await sleep(1500);
+
+    // 3. PILIH BULAN
+    await page.waitForSelector(BIRTHDAY_MONTH_SELECTOR, { visible: true });
     await page.click(BIRTHDAY_MONTH_SELECTOR);
-    await sleep(1000);
+    await sleep(2000); // Beri waktu dropdown popup muncul
     await BrowserService.selectDropdownItem(page, birthday.month);
-    await sleep(500);
+    await sleep(1500);
 
-    // 5. Pilih Hari
+    // 4. PILIH HARI
+    await page.waitForSelector(BIRTHDAY_DAY_SELECTOR, { visible: true });
     await page.click(BIRTHDAY_DAY_SELECTOR);
-    await sleep(1000);
+    await sleep(2000);
     await BrowserService.selectDropdownItem(page, birthday.day);
-    await sleep(1000); // Tunggu tombol Berikutnya menjadi aktif (biru)
 
-    // 6. Klik Berikutnya
+    // 5. KLIK BERIKUTNYA
+    // Tunggu tombol menjadi aktif (berwarna biru di UI)
+    await sleep(2500); 
     await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
     await page.click(BIRTHDAY_NEXT_BUTTON);
     
@@ -154,6 +170,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
