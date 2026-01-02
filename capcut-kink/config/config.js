@@ -27,10 +27,10 @@ export const CONFIG = {
       SIGNUP_BUTTON: '.lv_sign_in_panel_wide-sign-in-button', // Tombol daftar/lanjut setelah password
 
       // Birthday UI
-      BIRTHDAY_INPUT: 'input[placeholder*="Tahun"], input[placeholder*="Year"], .gate_birthday-picker-input',
-      BIRTHDAY_MONTH_SELECTOR: '.capcut-select:nth-of-type(1), .gate_birthday-picker-selector:nth-of-type(1)', 
-      BIRTHDAY_DAY_SELECTOR: '.capcut-select:nth-of-type(2), .gate_birthday-picker-selector:nth-of-type(2)',
-      BIRTHDAY_NEXT_BUTTON: '.lv_sign_in_panel_wide-birthday-next, button.next-btn',
+      const YEAR_INPUT = 'input[placeholder="Tahun"]';
+      const MONTH_BUTTON = 'div[role="button"]:has-text("Bulan")';
+      const DAY_BUTTON = 'div[role="button"]:has-text("Hari")';
+      const NEXT_BUTTON = 'button:has-text("Berikutnya")';
     },
   },
 
@@ -83,4 +83,5 @@ export const CONFIG = {
     DEFAULT_PASSWORD: 'keep123',
   },
 };
+
 
