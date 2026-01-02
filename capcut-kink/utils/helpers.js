@@ -85,7 +85,7 @@ Tanggal Lahir: ${birthday.day} ${birthday.month} ${birthday.year}
 
 // Ganti fungsi extractOTPCode di helpers.js Anda
 export const extractOTPCode = (emailBody) => {
-  // Regex diperkuat untuk mencari 6 digit angka yang biasanya berdiri sendiri
+  // Mencari 6 digit angka yang dipisahkan oleh spasi atau batas kata
   const match = emailBody.match(/\b(\d{6})\b/);
   return match ? match[1] : null;
 };
