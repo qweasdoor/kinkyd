@@ -49,51 +49,47 @@ static async fillPassword(page, password) {
    */
 static async fillBirthday(page) {
   const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
-  const birthday = generateRandomBirthday(); //
+  const birthday = generateRandomBirthday();
 
   try {
-    // 1. Tunggu transisi halaman Gambar 3
-    await sleep(5000); 
+    await sleep(5000); // Tunggu render halaman Birthday
 
-    // 2. Cari elemen di halaman utama atau semua frame yang tersedia
+    // Deteksi Frame Otomatis
     let target = page;
-    const element = await page.$(BIRTHDAY_INPUT);
-    if (!element) {
+    if (!(await page.$(BIRTHDAY_INPUT))) {
       for (const frame of page.frames()) {
         if (await frame.$(BIRTHDAY_INPUT)) { target = frame; break; }
       }
     }
 
-    // 3. Fokus dan Isi Tahun
-    await target.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 20000 });
+    // Isi Tahun dengan Fokus Paksa
+    await target.waitForSelector(BIRTHDAY_INPUT, { visible: true });
     await target.click(BIRTHDAY_INPUT, { clickCount: 3 });
     await target.keyboard.press('Backspace');
     await target.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
     await sleep(1000);
 
-    // 4. Pilih Bulan & Hari
-    const selectFromList = async (selector, value) => {
-      await target.click(selector);
+    // Pilih Bulan & Hari menggunakan Evaluate agar lebih stabil
+    const selectDate = async (sel, val) => {
+      await target.click(sel);
       await sleep(1500);
       await target.evaluate((v) => {
-        const items = Array.from(document.querySelectorAll('li, [role="option"]'));
-        const found = items.find(el => el.textContent.trim() === String(v));
+        const els = Array.from(document.querySelectorAll('li, [role="option"]'));
+        const found = els.find(e => e.textContent.trim() === String(v));
         if (found) found.click();
-      }, value);
+      }, val);
       await sleep(1000);
     };
 
-    await selectFromList(BIRTHDAY_MONTH_SELECTOR, birthday.month);
-    await selectFromList(BIRTHDAY_DAY_SELECTOR, birthday.day);
+    await selectDate(BIRTHDAY_MONTH_SELECTOR, birthday.month);
+    await selectDate(BIRTHDAY_DAY_SELECTOR, birthday.day);
 
-    // 5. Klik Berikutnya setelah tombol aktif (biru)
+    // Klik Berikutnya
     await sleep(2000);
-    await target.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
     await target.click(BIRTHDAY_NEXT_BUTTON);
-    
     return birthday;
   } catch (error) {
-    throw new Error(`Birthday step failed: ${error.message}`);
+    throw new Error(`Gagal di Birthday: ${error.message}`);
   }
 }
   /**
@@ -152,6 +148,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
