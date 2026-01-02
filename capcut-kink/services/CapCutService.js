@@ -48,35 +48,43 @@ static async fillPassword(page, password) {
    * Fill in birthday information (Optimized for UI provided)
    */
 static async fillBirthday(page) {
-    const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
-    const birthday = generateRandomBirthday();
+  const { BIRTHDAY_INPUT, BIRTHDAY_MONTH_SELECTOR, BIRTHDAY_DAY_SELECTOR, BIRTHDAY_NEXT_BUTTON } = CONFIG.CAPCUT.SELECTORS;
+  const birthday = generateRandomBirthday();
 
-    try {
-      // Tunggu Gambar 3 muncul
-      await page.waitForSelector(BIRTHDAY_INPUT, { visible: true });
+  try {
+    // Tunggu transisi halaman selesai (Sangat Penting)
+    await sleep(2000); 
+    
+    // Tunggu selector muncul dengan timeout yang lebih longgar
+    await page.waitForSelector(BIRTHDAY_INPUT, { visible: true, timeout: 20000 });
 
-      // 1. Tahun
-      await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 100 });
-      await sleep(500);
+    // 1. Isi Tahun
+    await page.click(BIRTHDAY_INPUT); // Klik dulu untuk memastikan fokus
+    await page.type(BIRTHDAY_INPUT, String(birthday.year), { delay: 150 });
+    await sleep(500);
 
-      // 2. Bulan (Dropdown 1)
-      await BrowserService.clickElement(page, BIRTHDAY_MONTH_SELECTOR);
-      await sleep(1000);
-      await BrowserService.selectDropdownItem(page, birthday.month);
+    // 2. Pilih Bulan
+    await page.waitForSelector(BIRTHDAY_MONTH_SELECTOR, { visible: true });
+    await page.click(BIRTHDAY_MONTH_SELECTOR);
+    await sleep(1000); // Tunggu popup dropdown muncul
+    await BrowserService.selectDropdownItem(page, birthday.month);
 
-      // 3. Hari (Dropdown 2)
-      await BrowserService.clickElement(page, BIRTHDAY_DAY_SELECTOR);
-      await sleep(1000);
-      await BrowserService.selectDropdownItem(page, birthday.day);
+    // 3. Pilih Hari
+    await page.waitForSelector(BIRTHDAY_DAY_SELECTOR, { visible: true });
+    await page.click(BIRTHDAY_DAY_SELECTOR);
+    await sleep(1000);
+    await BrowserService.selectDropdownItem(page, birthday.day);
 
-      // 4. Klik Berikutnya
-      await BrowserService.clickElement(page, BIRTHDAY_NEXT_BUTTON);
-      
-      return birthday;
-    } catch (error) {
-      throw new Error(`Gagal di tahap Birthday: ${error.message}`);
-    }
+    // 4. Klik Berikutnya
+    await page.waitForSelector(BIRTHDAY_NEXT_BUTTON, { visible: true });
+    await page.click(BIRTHDAY_NEXT_BUTTON);
+    
+    return birthday;
+  } catch (error) {
+    // Log error yang lebih detail untuk membantu debug jika gagal lagi
+    throw new Error(`Gagal di tahap Birthday: ${error.message}`);
   }
+}
   
   /**
    * Helper: Mencari dan mengeklik item di dalam dropdown berdasarkan teks
@@ -146,6 +154,7 @@ static async fillBirthday(page) {
   }
 
 }
+
 
 
 
